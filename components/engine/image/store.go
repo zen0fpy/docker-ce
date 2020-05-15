@@ -24,28 +24,32 @@ type Store interface {
 	GetParent(id ID) (ID, error)
 	SetLastUpdated(id ID) error
 	GetLastUpdated(id ID) (time.Time, error)
-	Children(id ID) []ID
+	Children(id ID) []ID // 子镜像
 	Map() map[ID]*Image
 	Heads() map[ID]*Image
 	Len() int
 }
 
 // LayerGetReleaser is a minimal interface for getting and releasing images.
+// TODO: 分布镜像层?
 type LayerGetReleaser interface {
 	Get(layer.ChainID) (layer.Layer, error)
 	Release(layer.Layer) ([]layer.Metadata, error)
 }
 
+// TODO: 镜像 与 层关系?
 type imageMeta struct {
 	layer    layer.Layer
 	children map[ID]struct{}
 }
 
+// TODO: fs -> rootfs -> image -> layer -> store     (实现 、接口 组织方式)
+
 type store struct {
 	sync.RWMutex
 	lss       map[string]LayerGetReleaser
 	images    map[ID]*imageMeta
-	fs        StoreBackend
+	fs        StoreBackend //后端存储
 	digestSet *digestset.Set
 }
 

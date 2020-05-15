@@ -156,15 +156,20 @@ type ChildConfig struct {
 func NewChildImage(img *Image, child ChildConfig, os string) *Image {
 	isEmptyLayer := layer.IsEmpty(child.DiffID)
 	var rootFS *RootFS
+
 	if img.RootFS != nil {
+		// 复制根镜像
 		rootFS = img.RootFS.Clone()
 	} else {
 		rootFS = NewRootFS()
 	}
 
+	// 非空层
 	if !isEmptyLayer {
 		rootFS.Append(child.DiffID)
 	}
+	// 把创建子镜像的信息，添加到
+	// history
 	imgHistory := NewHistory(
 		child.Author,
 		child.Comment,
@@ -190,6 +195,7 @@ func NewChildImage(img *Image, child ChildConfig, os string) *Image {
 	}
 }
 
+// 保存构建镜像的命令, 使用场景?
 // History stores build commands that were used to create an image
 type History struct {
 	// Created is the timestamp at which the image was created
