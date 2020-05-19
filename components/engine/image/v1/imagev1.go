@@ -18,6 +18,7 @@ import (
 // blank fields.
 var noFallbackMinVersion = "1.8.3"
 
+// v1 json配置的历史
 // HistoryFromConfig creates a History struct from v1 configuration JSON
 func HistoryFromConfig(imageJSON []byte, emptyLayer bool) (image.History, error) {
 	h := image.History{}
@@ -39,11 +40,13 @@ func HistoryFromConfig(imageJSON []byte, emptyLayer bool) (image.History, error)
 // Used for backwards compatibility with old clients.
 func CreateID(v1Image image.V1Image, layerID layer.ChainID, parent digest.Digest) (digest.Digest, error) {
 	v1Image.ID = ""
+	// 先序列化, 判断是不是json
 	v1JSON, err := json.Marshal(v1Image)
 	if err != nil {
 		return "", err
 	}
 
+	// 再解序列化
 	var config map[string]*json.RawMessage
 	if err := json.Unmarshal(v1JSON, &config); err != nil {
 		return "", err
@@ -55,6 +58,7 @@ func CreateID(v1Image image.V1Image, layerID layer.ChainID, parent digest.Digest
 		config["parent"] = rawJSON(parent)
 	}
 
+	// 生成摘要
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return "", err
@@ -74,6 +78,7 @@ func MakeConfigFromV1Config(imageJSON []byte, rootfs *image.RootFS, history []im
 		return nil, err
 	}
 
+	// 老版本
 	useFallback := versions.LessThan(dver.DockerVersion, noFallbackMinVersion)
 
 	if useFallback {
@@ -121,6 +126,7 @@ func MakeV1ConfigFromConfig(img *image.Image, v1ID, parentV1ID string, throwaway
 		f := imageType.Field(i)
 		jsonName := strings.Split(f.Tag.Get("json"), ",")[0]
 		// Parent is handled specially below.
+		// 父节点在下面处理
 		if jsonName != "" && jsonName != "parent" {
 			delete(configAsMap, jsonName)
 		}

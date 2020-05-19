@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// 基于父链，创建本地镜像缓存
 // NewLocal returns a local image cache, based on parent chain
 func NewLocal(store image.Store) *LocalImageCache {
 	return &LocalImageCache{
@@ -30,10 +31,11 @@ func (lic *LocalImageCache) GetCache(imgID string, config *containertypes.Config
 	return getImageIDAndError(getLocalCachedImage(lic.store, image.ID(imgID), config))
 }
 
+// 历史对象镜像缓存
 // New returns an image cache, based on history objects
 func New(store image.Store) *ImageCache {
 	return &ImageCache{
-		store:           store,
+		store:           store, // 有了store, 为啥还要创建一个本地镜像缓存
 		localImageCache: NewLocal(store),
 	}
 }
@@ -51,6 +53,7 @@ func (ic *ImageCache) Populate(image *image.Image) {
 }
 
 // GetCache returns the image id found in the cache
+// TODO: 为啥传入是parentID,
 func (ic *ImageCache) GetCache(parentID string, cfg *containertypes.Config) (string, error) {
 	imgID, err := ic.localImageCache.GetCache(parentID, cfg)
 	if err != nil {
